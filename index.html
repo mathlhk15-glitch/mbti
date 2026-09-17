@@ -29,6 +29,8 @@ main{max-width:880px;margin:auto;padding:28px 20px calc(64px + var(--safe-b))}.v
 .overdone-note{background:#fff7e8;border:1px solid #ecd6a8;border-radius:var(--r-sm);padding:12px 14px;font-size:14px;color:#6b4d18;margin-bottom:14px;line-height:1.6}.overdone-note b{display:block;margin-bottom:3px}
 .pref-tip{font-size:12.5px;color:#5a6252;background:#f7f9f2;border-radius:9px;padding:7px 10px;margin:6px 0 0}.pref-tip b{color:var(--dark)}
 .self-question{background:#f4f9ea;border:1px solid #dde7d0;border-radius:var(--r-sm);padding:13px 15px;font-weight:700;color:var(--dark);margin-bottom:6px}
+.password-hero{text-align:center;max-width:420px;margin:40px auto}.lock-icon{font-size:40px;margin-bottom:6px}.password-form{display:flex;gap:10px;margin-top:22px}.password-input{flex:1;text-align:center;letter-spacing:.08em}.password-error{color:#b3441f;font-size:13px;margin-top:14px}
+@media(max-width:680px){.password-hero{margin:20px auto}.password-form{flex-direction:column}}
 @media(max-width:680px){main{padding:18px 14px calc(50px + var(--safe-b))}.hero{padding:24px 18px}.estimate-grid{grid-template-columns:1fr 1fr}.result-grid,.pref-cards{grid-template-columns:1fr}.compare{grid-template-columns:1fr}.compare-box{display:flex;align-items:center;justify-content:space-between;text-align:left;padding:13px 16px}.compare-box .value{font-size:19px}.quiz-card{padding:20px 16px}.choice{font-size:16.5px;padding:16px 17px}.choice-num{width:27px;height:27px}.stem{margin:10px 0 20px}.brand{font-size:14px}.topbar-inner{padding:10px 14px}.actions{margin-top:18px}.actions .btn{flex:1 1 auto}.type-code{letter-spacing:.03em}}
 @media(max-width:380px){.basic-info-grid{grid-template-columns:1fr}.estimate-grid{grid-template-columns:1fr}.hero{padding:20px 16px}.quiz-card{padding:18px 14px}.choice{font-size:16px;padding:15px}}
 @media print{body{background:white}.topbar,.no-print,#startView,#quizView,#completeView,.modal,.storage-warning{display:none!important}main{max-width:none;padding:0}.view{display:none!important}#resultView{display:block!important}.result-hero,.result-card{box-shadow:none;break-inside:avoid}.result-grid{grid-template-columns:1fr 1fr;gap:9mm}.result-card{padding:12px}.pref-cards{grid-template-columns:1fr 1fr}.footer-note{font-size:10px}.reflection textarea{border:1px solid #bbb;height:auto!important;min-height:80px;overflow:visible!important;resize:none}.print-break{break-before:page}.btn{display:none!important}}
@@ -39,7 +41,20 @@ main{max-width:880px;margin:auto;padding:28px 20px calc(64px + var(--safe-b))}.v
 <header class="topbar"><div class="topbar-inner"><div class="brand">성격유형 자기이해 프로그램</div><div class="progress-wrap" id="progressWrap"><div class="progress-meta"><span id="progressText">1 / 93</span><span id="progressPct">1%</span></div><div class="progress"><div id="progressBar"></div></div></div></div></header>
 <div class="storage-warning" id="storageWarning" role="status" aria-live="polite">이 브라우저에서는 진행 상태를 자동 저장할 수 없습니다. 페이지를 닫거나 새로고침하면 응답이 사라질 수 있으니 검사 완료 전까지 현재 창을 유지해 주세요.</div>
 <main>
-<section id="startView" class="view active">
+<section id="passwordView" class="view active">
+  <div class="hero password-hero">
+    <div class="lock-icon">🔒</div>
+    <h1>비밀번호를 입력해 주세요</h1>
+    <div class="lead">선생님이 알려주신 비밀번호를 입력하면 검사를 시작할 수 있습니다.</div>
+    <div class="password-form">
+      <input type="password" id="passwordInput" class="text-input password-input" placeholder="비밀번호" autocomplete="off">
+      <button type="button" class="btn btn-primary" id="passwordSubmitBtn">확인</button>
+    </div>
+    <p id="passwordError" class="password-error" hidden>비밀번호가 올바르지 않습니다. 다시 확인해 주세요.</p>
+  </div>
+</section>
+
+<section id="startView" class="view">
   <div class="hero">
     <h1>나를 이해하는 93개의 선택</h1>
     <div class="lead">한 문항씩 선택하면 자동으로 다음 문항으로 넘어갑니다. 검사 전 나의 예상 유형과 검사 결과, 그리고 마지막에 내가 생각하는 최적 유형을 비교해 볼 수 있습니다.</div>
@@ -409,8 +424,41 @@ window.addEventListener('keydown',e=>{
 });
 
 buildEstimate();validateScoreKey();validateContentData();
-const saved=loadState();
-if(saved){state=Object.assign(state,saved);state.devChecked=Array.isArray(state.devChecked)?state.devChecked:[];state.reflections=Array.isArray(state.reflections)?state.reflections:['','',''];$('studentName').value=state.name||'';$('studentClass').value=state.klass||'';syncEstimateButtons();updateStartStatus();const answered=answeredCount();$('resumeText').textContent=state.completed&&answered===TOTAL?`완료된 검사 결과가 저장되어 있습니다. 결과를 다시 볼까요?`:`${answered}개 문항까지 응답한 기록이 있습니다. 이어서 검사할까요?`;$('resumeModal').classList.add('show');}else{updateStartStatus();}
+
+function startAppFlow(){
+  const saved=loadState();
+  if(saved){state=Object.assign(state,saved);state.devChecked=Array.isArray(state.devChecked)?state.devChecked:[];state.reflections=Array.isArray(state.reflections)?state.reflections:['','',''];$('studentName').value=state.name||'';$('studentClass').value=state.klass||'';syncEstimateButtons();updateStartStatus();const answered=answeredCount();$('resumeText').textContent=state.completed&&answered===TOTAL?`완료된 검사 결과가 저장되어 있습니다. 결과를 다시 볼까요?`:`${answered}개 문항까지 응답한 기록이 있습니다. 이어서 검사할까요?`;$('resumeModal').classList.add('show');}else{updateStartStatus();}
+}
+
+const ACCESS_STORAGE_KEY='career_personality_access_v1';
+const ACCESS_PASSWORD='lhk15';
+function hasAccess(){try{return localStorage.getItem(ACCESS_STORAGE_KEY)==='1'}catch(e){return false}}
+function grantAccessAndStart(){
+  try{localStorage.setItem(ACCESS_STORAGE_KEY,'1')}catch(e){}
+  showView('startView');
+  startAppFlow();
+}
+function submitPassword(){
+  const val=$('passwordInput').value;
+  if(val===ACCESS_PASSWORD){
+    $('passwordError').hidden=true;
+    grantAccessAndStart();
+  }else{
+    $('passwordError').hidden=false;
+    $('passwordInput').value='';
+    $('passwordInput').focus();
+  }
+}
+$('passwordSubmitBtn').addEventListener('click',e=>{e.preventDefault();submitPassword()});
+$('passwordInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitPassword()}});
+
+if(hasAccess()){
+  showView('startView');
+  startAppFlow();
+}else{
+  showView('passwordView');
+  $('passwordInput').focus();
+}
 $('resumeYes').addEventListener('click',e=>{
   e.preventDefault();
   $('resumeModal').classList.remove('show');
